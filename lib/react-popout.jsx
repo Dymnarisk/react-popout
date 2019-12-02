@@ -18,6 +18,27 @@ const DEFAULT_OPTIONS = {
 
 const ABOUT_BLANK = 'about:blank';
 
+function copyStyles(sourceDoc, targetDoc) {
+    Array.from(sourceDoc.styleSheets).forEach(styleSheet => {
+        if (styleSheet.cssRules) { // for <style> elements
+            const newStyleEl = sourceDoc.createElement('style');
+
+            Array.from(styleSheet.cssRules).forEach(cssRule => {
+              // write the text of each rule into the body of the style element
+              newStyleEl.appendChild(sourceDoc.createTextNode(cssRule.cssText));
+            });
+
+            targetDoc.head.appendChild(newStyleEl);
+        } else if (styleSheet.href) { // for <link> elements loading CSS from a URL
+            const newLinkEl = sourceDoc.createElement('link');
+
+            newLinkEl.rel = 'stylesheet';
+            newLinkEl.href = styleSheet.href;
+            targetDoc.head.appendChild(newLinkEl);
+        }
+    });
+}
+
 /**
  * @class PopoutWindow
  */
@@ -115,6 +136,8 @@ export default class PopoutWindow extends React.Component {
 
             this.setState({ container });
             this.renderToContainer(container, popoutWindow, this.props.children);
+
+            copyStyles(document, popoutWindow.document);
         }
     }
 
